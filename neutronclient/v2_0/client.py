@@ -647,6 +647,11 @@ class Client(ClientBase):
     bgpvpn_router_association_path =\
         "/bgpvpn/bgpvpns/%s/router_associations/%s"
 
+    taas_tap_services_path = "/taas/tap_services"
+    taas_tap_service_path = taas_tap_services_path + "/%s"
+    taas_tap_flows_path = "/taas/tap_flows"
+    taas_tap_flow_path = taas_tap_flows_path + "/%s"
+
     # API has no way to report plurals, so we have to hard code them
     EXTED_PLURALS = {'routers': 'router',
                      'floatingips': 'floatingip',
@@ -699,6 +704,8 @@ class Client(ClientBase):
                      'bgpvpns': 'bgpvpn',
                      'network_associations': 'network_association',
                      'router_associations': 'router_association',
+                     'tap_services': 'tap_service',
+                     'tap_flows': 'tap_flow',
                      }
 
     def list_ext(self, collection, path, retrieve_all, **_params):
@@ -2165,6 +2172,49 @@ class Client(ClientBase):
         """Deletes the specified BGP VPN router association"""
         return self.delete(
             self.bgpvpn_router_association_path % (bgpvpn, router_assoc))
+
+    def create_taas_tap_service(self, body=None):
+        """Creates a new Tap Service."""
+        return self.post(self.taas_tap_services_path, body=body)
+
+    def update_taas_tap_service(self, tap_service, body=None):
+        """Update a Tap Service."""
+        return self.put(self.taas_tap_service_path % tap_service, body=body)
+
+    def delete_taas_tap_service(self, tap_service):
+        """Deletes the specified Tap Service."""
+        return self.delete(self.taas_tap_service_path % (tap_service))
+
+    def list_taas_tap_services(self, retrieve_all=True, **_params):
+        """Fetches a list of all Tap Services."""
+        return self.list('tap_services', self.taas_tap_services_path,
+                         retrieve_all, **_params)
+
+    def show_taas_tap_service(self, tap_service, **_params):
+        """Fetches information of a certain Tap Service."""
+        return self.get(self.taas_tap_service_path % (tap_service),
+                        params=_params)
+
+    def create_taas_tap_flow(self, body=None):
+        """Creates a new Tap Flow."""
+        return self.post(self.taas_tap_flows_path, body=body)
+
+    def update_taas_tap_flow(self, tap_flow, body=None):
+        """Update a Tap Flow."""
+        return self.put(self.taas_tap_flow_path % tap_flow, body=body)
+
+    def delete_taas_tap_flow(self, tap_flow):
+        """Deletes the specified Tap Flow."""
+        return self.delete(self.taas_tap_flow_path % (tap_flow))
+
+    def list_taas_tap_flows(self, retrieve_all=True, **_params):
+        """Fetches a list of all Tap Flows."""
+        return self.list('tap_flows', self.taas_tap_flows_path, retrieve_all,
+                         **_params)
+
+    def show_taas_tap_flow(self, tap_flow, **_params):
+        """Fetches information of a certain Tap Flow."""
+        return self.get(self.taas_tap_flow_path % (tap_flow), params=_params)
 
     def __init__(self, **kwargs):
         """Initialize a new client for the Neutron v2.0 API."""
