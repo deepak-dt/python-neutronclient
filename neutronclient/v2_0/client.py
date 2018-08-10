@@ -1,5 +1,6 @@
 # Copyright 2012 OpenStack Foundation.
 # Copyright 2015 Hewlett-Packard Development Company, L.P.
+# Copyright 2018 AT&T Corporation
 # All Rights Reserved
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
