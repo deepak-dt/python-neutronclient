@@ -50,7 +50,7 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
         super(TestCreateTaasTapFlow, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_flow._get_id',
                    new=_get_id).start()
-        self.neutronclient.create_taas_tap_flow = mock.Mock(
+        self.neutronclient.create_tap_flow = mock.Mock(
             return_value={'tap_flow': self._tap_flow})
         self.data = self.get_data()
 
@@ -71,7 +71,7 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         columns, data = (self.cmd.take_action(parsed_args))
 
-        self.neutronclient.create_taas_tap_flow.assert_called_once_with({
+        self.neutronclient.create_tap_flow.assert_called_once_with({
             'tap_flow': {'source_port': self._tap_flow['port'],
                          'tap_service_id': self._tap_flow['tap_service'],
                          'direction': self._tap_flow['direction'],
@@ -100,7 +100,7 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         columns, data = (self.cmd.take_action(parsed_args))
 
-        self.neutronclient.create_taas_tap_flow.assert_called_once_with({
+        self.neutronclient.create_tap_flow.assert_called_once_with({
             'tap_flow': {'name': self._tap_flow['name'],
                          'source_port': self._tap_flow['port'],
                          'tap_service_id': self._tap_flow['tap_service'],
@@ -126,12 +126,12 @@ class TestDeleteTaasTapFlow(fakes.TestNeutronClientOSCV2):
         super(TestDeleteTaasTapFlow, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_flow._get_id',
                    new=_get_id).start()
-        self.neutronclient.delete_taas_tap_flow = mock.Mock(return_value=None)
+        self.neutronclient.delete_tap_flow = mock.Mock(return_value=None)
         self.cmd = taas_tap_flow.DeleteTaasTapFlow(self.app, self.namespace)
 
     def test_delete_tap_flow(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_flow_delete = client.delete_taas_tap_flow
+        mock_tap_flow_delete = client.delete_tap_flow
         arglist = [
             self._tap_flow[0]['id'],
         ]
@@ -175,7 +175,7 @@ class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
         super(TestListTaasTapFlow, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_flow._get_id',
                    new=_get_id).start()
-        self.neutronclient.list_taas_tap_flows = mock.Mock(
+        self.neutronclient.list_tap_flows = mock.Mock(
             return_value={'tap_flows': self._tap_flows}
         )
         # Get the command object to test
@@ -186,7 +186,7 @@ class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         columns = self.cmd.take_action(parsed_args)[0]
-        tap_flows = self.neutronclient.list_taas_tap_flows()['tap_flows']
+        tap_flows = self.neutronclient.list_tap_flows()['tap_flows']
         tap_flow = tap_flows[0]
         data = [
             tap_flow['id'],
@@ -201,7 +201,7 @@ class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
     def test_list_with_long_option(self):
         arglist = ['--long']
         verifylist = [('long', True)]
-        tap_flows = self.neutronclient.list_taas_tap_flows()['tap_flows']
+        tap_flows = self.neutronclient.list_tap_flows()['tap_flows']
         tap_flow = tap_flows[0]
         data = [
             tap_flow['id'],
@@ -226,12 +226,12 @@ class TestSetTaasTapFlow(fakes.TestNeutronClientOSCV2):
         super(TestSetTaasTapFlow, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_flow._get_id',
                    new=_get_id).start()
-        self.neutronclient.update_taas_tap_flow = mock.Mock(return_value=None)
+        self.neutronclient.update_tap_flow = mock.Mock(return_value=None)
         self.cmd = taas_tap_flow.SetTaasTapFlow(self.app, self.namespace)
 
     def test_set_tap_flow(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_flow_update = client.update_taas_tap_flow
+        mock_tap_flow_update = client.update_tap_flow
         arglist = [
             self._tap_flow_name,
             '--name', 'name_updated',
@@ -283,7 +283,7 @@ class TestShowTaasTapFlow(fakes.TestNeutronClientOSCV2):
         mock.patch('neutronclient.osc.v2.taas.taas_tap_flow._get_id',
                    new=_get_id).start()
 
-        self.neutronclient.show_taas_tap_flow = mock.Mock(
+        self.neutronclient.show_tap_flow = mock.Mock(
             return_value=self._tap_flow
         )
 
@@ -292,7 +292,7 @@ class TestShowTaasTapFlow(fakes.TestNeutronClientOSCV2):
 
     def test_show_tap_flow(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_flow_show = client.show_taas_tap_flow
+        mock_tap_flow_show = client.show_tap_flow
         arglist = [
             self._tap_flow_id,
         ]

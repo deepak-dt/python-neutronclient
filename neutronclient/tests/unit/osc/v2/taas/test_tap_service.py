@@ -46,7 +46,7 @@ class TestCreateTaasTapService(fakes.TestNeutronClientOSCV2):
         super(TestCreateTaasTapService, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_service._get_id',
                    new=_get_id).start()
-        self.neutronclient.create_taas_tap_service = mock.Mock(
+        self.neutronclient.create_tap_service = mock.Mock(
             return_value={'tap_service': self._tap_service})
         self.data = self.get_data()
 
@@ -65,7 +65,7 @@ class TestCreateTaasTapService(fakes.TestNeutronClientOSCV2):
         ]
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         columns, data = (self.cmd.take_action(parsed_args))
-        self.neutronclient.create_taas_tap_service.assert_called_once_with({
+        self.neutronclient.create_tap_service.assert_called_once_with({
             'tap_service': {'name': self._tap_service['name'],
                             'port_id': self._tap_service['port'],
                             }
@@ -89,7 +89,7 @@ class TestCreateTaasTapService(fakes.TestNeutronClientOSCV2):
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         columns, data = (self.cmd.take_action(parsed_args))
 
-        self.neutronclient.create_taas_tap_service.assert_called_once_with({
+        self.neutronclient.create_tap_service.assert_called_once_with({
             'tap_service': {'name': self._tap_service['name'],
                             'port_id': self._tap_service['port'],
                             'description': self._tap_service['description'],
@@ -113,14 +113,14 @@ class TestDeleteTaasTapService(fakes.TestNeutronClientOSCV2):
         super(TestDeleteTaasTapService, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_service._get_id',
                    new=_get_id).start()
-        self.neutronclient.delete_taas_tap_service = mock.Mock(
+        self.neutronclient.delete_tap_service = mock.Mock(
             return_value=None)
         self.cmd = taas_tap_service.DeleteTaasTapService(self.app,
                                                          self.namespace)
 
     def test_delete_tap_service(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_service_delete = client.delete_taas_tap_service
+        mock_tap_service_delete = client.delete_tap_service
         arglist = [
             self._tap_service[0]['id'],
         ]
@@ -158,7 +158,7 @@ class TestListTaasTapService(fakes.TestNeutronClientOSCV2):
         super(TestListTaasTapService, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_service._get_id',
                    new=_get_id).start()
-        self.neutronclient.list_taas_tap_services = mock.Mock(
+        self.neutronclient.list_tap_services = mock.Mock(
             return_value={'tap_services': self._tap_services}
         )
         # Get the command object to test
@@ -171,7 +171,7 @@ class TestListTaasTapService(fakes.TestNeutronClientOSCV2):
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         columns = self.cmd.take_action(parsed_args)[0]
         tap_services = \
-            self.neutronclient.list_taas_tap_services()['tap_services']
+            self.neutronclient.list_tap_services()['tap_services']
         tap_service = tap_services[0]
         data = [
             tap_service['id'],
@@ -185,7 +185,7 @@ class TestListTaasTapService(fakes.TestNeutronClientOSCV2):
         arglist = ['--long']
         verifylist = [('long', True)]
         tap_services = \
-            self.neutronclient.list_taas_tap_services()['tap_services']
+            self.neutronclient.list_tap_services()['tap_services']
         tap_service = tap_services[0]
         data = [
             tap_service['id'],
@@ -208,13 +208,13 @@ class TestSetTaasTapService(fakes.TestNeutronClientOSCV2):
         super(TestSetTaasTapService, self).setUp()
         mock.patch('neutronclient.osc.v2.taas.taas_tap_service._get_id',
                    new=_get_id).start()
-        self.neutronclient.update_taas_tap_service = mock.Mock(
+        self.neutronclient.update_tap_service = mock.Mock(
             return_value=None)
         self.cmd = taas_tap_service.SetTaasTapService(self.app, self.namespace)
 
     def test_set_tap_service(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_service_update = client.update_taas_tap_service
+        mock_tap_service_update = client.update_tap_service
         arglist = [
             self._tap_service_name,
             '--name', 'name_updated',
@@ -262,7 +262,7 @@ class TestShowTaasTapService(fakes.TestNeutronClientOSCV2):
         mock.patch('neutronclient.osc.v2.taas.taas_tap_service._get_id',
                    new=_get_id).start()
 
-        self.neutronclient.show_taas_tap_service = mock.Mock(
+        self.neutronclient.show_tap_service = mock.Mock(
             return_value=self._tap_service
         )
 
@@ -272,7 +272,7 @@ class TestShowTaasTapService(fakes.TestNeutronClientOSCV2):
 
     def test_show_tap_service(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_service_show = client.show_taas_tap_service
+        mock_tap_service_show = client.show_tap_service
         arglist = [
             self._tap_service_id,
         ]

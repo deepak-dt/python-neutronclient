@@ -62,7 +62,7 @@ class CreateTaasTapService(command.ShowOne):
         client = self.app.client_manager.neutronclient
         attrs = _get_common_attrs(self.app.client_manager, parsed_args)
         body = {resource: attrs}
-        obj = client.create_taas_tap_service(body)[resource]
+        obj = client.create_tap_service(body)[resource]
         columns, display_columns = column_util.get_columns(obj, _attr_map)
         data = utils.get_dict_properties(obj, columns)
         return display_columns, data
@@ -85,7 +85,7 @@ class DeleteTaasTapService(command.Command):
         client = self.app.client_manager.neutronclient
         tap_service_id = _get_id(client, parsed_args.tap_service, resource)
         try:
-            client.delete_taas_tap_service(tap_service_id)
+            client.delete_tap_service(tap_service_id)
         except Exception as e:
             msg = (_("Failed to delete tap service with name "
                      "or ID '%(tap_service)s': %(e)s")
@@ -107,7 +107,7 @@ class ListTaasTapService(command.Lister):
 
     def take_action(self, parsed_args):
         client = self.app.client_manager.neutronclient
-        data = client.list_taas_tap_services()
+        data = client.list_tap_services()
         headers, columns = column_util.get_column_definitions(
             _attr_map, long_listing=parsed_args.long)
         return (headers,
@@ -143,7 +143,7 @@ class SetTaasTapService(command.Command):
                                   is_create=False)
         body = {resource: attrs}
         try:
-            client.update_taas_tap_service(tap_service_id, body)
+            client.update_tap_service(tap_service_id, body)
         except Exception as e:
             msg = (_("Failed to update tap service '%(tap_service)s': %(e)s")
                    % {'tap_service': parsed_args.tap_service, 'e': e})
@@ -165,7 +165,7 @@ class ShowTaasTapService(command.ShowOne):
     def take_action(self, parsed_args):
         client = self.app.client_manager.neutronclient
         tap_service_id = _get_id(client, parsed_args.tap_service, resource)
-        obj = client.show_taas_tap_service(tap_service_id)[resource]
+        obj = client.show_tap_service(tap_service_id)[resource]
         columns, display_columns = column_util.get_columns(obj, _attr_map)
         data = utils.get_dict_properties(obj, columns)
         return display_columns, data

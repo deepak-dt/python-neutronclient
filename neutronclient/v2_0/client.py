@@ -2174,46 +2174,46 @@ class Client(ClientBase):
         return self.delete(
             self.bgpvpn_router_association_path % (bgpvpn, router_assoc))
 
-    def create_taas_tap_service(self, body=None):
+    def create_tap_service(self, body=None):
         """Creates a new Tap Service."""
         return self.post(self.taas_tap_services_path, body=body)
 
-    def update_taas_tap_service(self, tap_service, body=None):
+    def update_tap_service(self, tap_service, body=None):
         """Update a Tap Service."""
         return self.put(self.taas_tap_service_path % tap_service, body=body)
 
-    def delete_taas_tap_service(self, tap_service):
+    def delete_tap_service(self, tap_service):
         """Deletes the specified Tap Service."""
         return self.delete(self.taas_tap_service_path % (tap_service))
 
-    def list_taas_tap_services(self, retrieve_all=True, **_params):
+    def list_tap_services(self, retrieve_all=True, **_params):
         """Fetches a list of all Tap Services."""
         return self.list('tap_services', self.taas_tap_services_path,
                          retrieve_all, **_params)
 
-    def show_taas_tap_service(self, tap_service, **_params):
+    def show_tap_service(self, tap_service, **_params):
         """Fetches information of a certain Tap Service."""
         return self.get(self.taas_tap_service_path % (tap_service),
                         params=_params)
 
-    def create_taas_tap_flow(self, body=None):
+    def create_tap_flow(self, body=None):
         """Creates a new Tap Flow."""
         return self.post(self.taas_tap_flows_path, body=body)
 
-    def update_taas_tap_flow(self, tap_flow, body=None):
+    def update_tap_flow(self, tap_flow, body=None):
         """Update a Tap Flow."""
         return self.put(self.taas_tap_flow_path % tap_flow, body=body)
 
-    def delete_taas_tap_flow(self, tap_flow):
+    def delete_tap_flow(self, tap_flow):
         """Deletes the specified Tap Flow."""
         return self.delete(self.taas_tap_flow_path % (tap_flow))
 
-    def list_taas_tap_flows(self, retrieve_all=True, **_params):
+    def list_tap_flows(self, retrieve_all=True, **_params):
         """Fetches a list of all Tap Flows."""
         return self.list('tap_flows', self.taas_tap_flows_path, retrieve_all,
                          **_params)
 
-    def show_taas_tap_flow(self, tap_flow, **_params):
+    def show_tap_flow(self, tap_flow, **_params):
         """Fetches information of a certain Tap Flow."""
         return self.get(self.taas_tap_flow_path % (tap_flow), params=_params)
 

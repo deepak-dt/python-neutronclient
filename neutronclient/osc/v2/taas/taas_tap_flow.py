@@ -78,7 +78,7 @@ class CreateTaasTapFlow(command.ShowOne):
         client = self.app.client_manager.neutronclient
         attrs = _get_common_attrs(self.app.client_manager, parsed_args)
         body = {resource: attrs}
-        obj = client.create_taas_tap_flow(body)[resource]
+        obj = client.create_tap_flow(body)[resource]
         columns, display_columns = column_util.get_columns(obj, _attr_map)
         data = utils.get_dict_properties(obj, columns)
         return display_columns, data
@@ -101,7 +101,7 @@ class DeleteTaasTapFlow(command.Command):
         client = self.app.client_manager.neutronclient
         tap_flow_id = _get_id(client, parsed_args.tap_flow, resource)
         try:
-            client.delete_taas_tap_flow(tap_flow_id)
+            client.delete_tap_flow(tap_flow_id)
         except Exception as e:
             msg = (_("Failed to delete tap flow with name "
                      "or ID '%(tap_flow)s': %(e)s")
@@ -123,7 +123,7 @@ class ListTaasTapFlow(command.Lister):
 
     def take_action(self, parsed_args):
         client = self.app.client_manager.neutronclient
-        data = client.list_taas_tap_flows()
+        data = client.list_tap_flows()
         headers, columns = column_util.get_column_definitions(
             _attr_map, long_listing=parsed_args.long)
         return (headers,
@@ -159,7 +159,7 @@ class SetTaasTapFlow(command.Command):
                                   is_create=False)
         body = {resource: attrs}
         try:
-            client.update_taas_tap_flow(tap_flow_id, body)
+            client.update_tap_flow(tap_flow_id, body)
         except Exception as e:
             msg = (_("Failed to update tap flow '%(tap_flow)s': %(e)s")
                    % {'tap_flow': parsed_args.tap_flow, 'e': e})
@@ -181,7 +181,7 @@ class ShowTaasTapFlow(command.ShowOne):
     def take_action(self, parsed_args):
         client = self.app.client_manager.neutronclient
         tap_flow_id = _get_id(client, parsed_args.tap_flow, resource)
-        obj = client.show_taas_tap_flow(tap_flow_id)[resource]
+        obj = client.show_tap_flow(tap_flow_id)[resource]
         columns, display_columns = column_util.get_columns(obj, _attr_map)
         data = utils.get_dict_properties(obj, columns)
         return display_columns, data
