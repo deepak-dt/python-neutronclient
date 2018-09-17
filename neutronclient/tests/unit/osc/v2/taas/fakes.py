@@ -104,6 +104,7 @@ class FakeTaasTapFlow(object):
             'tap_service': uuidutils.generate_uuid(),
             'port': uuidutils.generate_uuid(),
             'direction': 'BOTH',
+            'vlan_mirror': '0-4095'
             'project_id': uuidutils.generate_uuid()
         }
 

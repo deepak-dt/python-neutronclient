@@ -33,7 +33,8 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
                'Name',
                'Project',
                'Source Port',
-               'Tap Service Port')
+               'Tap Service Port',
+               'Vlan Mirror')
 
     def get_data(self):
         return (
@@ -44,6 +45,7 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
             self._tap_flow['project_id'],
             self._tap_flow['port'],
             self._tap_flow['tap_service'],
+            self._tap_flow['vlan_mirror'],
         )
 
     def setUp(self):
@@ -61,12 +63,14 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
         arglist = [
             "--port", self._tap_flow['port'],
             "--tap-service", self._tap_flow['tap_service'],
-            "--direction", self._tap_flow['direction']
+            "--direction", self._tap_flow['direction'],
+            "--vlan-mirror", self._tap_flow['vlan_mirror']
         ]
         verifylist = [
             ('source_port', self._tap_flow['port']),
             ('tap_service_id', self._tap_flow['tap_service']),
-            ('direction', self._tap_flow['direction'])
+            ('direction', self._tap_flow['direction']),
+            ('vlan_mirror', self._tap_flow['vlan_mirror'])
         ]
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         columns, data = (self.cmd.take_action(parsed_args))
@@ -75,6 +79,7 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
             'tap_flow': {'source_port': self._tap_flow['port'],
                          'tap_service_id': self._tap_flow['tap_service'],
                          'direction': self._tap_flow['direction'],
+                         'vlan_mirror': self._tap_flow['vlan_mirror'],
                          }
         })
         self.assertEqual(self.columns, columns)
@@ -86,6 +91,7 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
             "--port", self._tap_flow['port'],
             "--tap-service", self._tap_flow['tap_service'],
             "--direction", self._tap_flow['direction'],
+            "--vlan-mirror", self._tap_flow['vlan_mirror'],
             "--name", self._tap_flow['name'],
         ]
 
@@ -94,7 +100,8 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
             ('tap_service_id', self._tap_flow['tap_service']),
             ('name', self._tap_flow['name']),
             ('description', self._tap_flow['description']),
-            ('direction', self._tap_flow['direction'])
+            ('direction', self._tap_flow['direction']),
+            ('vlan_mirror', self._tap_flow['vlan_mirror'])
         ]
 
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -106,6 +113,7 @@ class TestCreateTaasTapFlow(fakes.TestNeutronClientOSCV2):
                          'tap_service_id': self._tap_flow['tap_service'],
                          'description': self._tap_flow['description'],
                          'direction': self._tap_flow['direction'],
+                         'vlan_mirror': self._tap_flow['vlan_mirror'],
                          }
         })
         self.assertEqual(self.columns, columns)
@@ -148,9 +156,9 @@ class TestDeleteTaasTapFlow(fakes.TestNeutronClientOSCV2):
 class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
     _tap_flows = fakes.FakeTaasTapFlow.create_tap_flows()
     columns = ['ID', 'Name', 'Status', 'Source Port', 'Tap Service Port',
-               'Direction']
+               'Direction', 'Vlan Mirror']
     columns_long = ['ID', 'Name', 'Status', 'Source Port',
-                    'Tap Service Port', 'Direction',
+                    'Tap Service Port', 'Direction', 'Vlan Mirror',
                     'Description', 'Project']
     _tap_flow = _tap_flows[0]
     data = [
@@ -158,7 +166,8 @@ class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
         _tap_flow['name'],
         _tap_flow['port'],
         _tap_flow['tap_service'],
-        _tap_flow['direction']
+        _tap_flow['direction'],
+        _tap_flow['vlan_mirror']
     ]
     data_long = [
         _tap_flow['id'],
@@ -166,6 +175,7 @@ class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
         _tap_flow['port'],
         _tap_flow['tap_service'],
         _tap_flow['direction'],
+        _tap_flow['vlan_mirror'],
         _tap_flow['description']
     ]
     _tap_flow1 = {'tap_flows': _tap_flow}
@@ -193,7 +203,8 @@ class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
             tap_flow['name'],
             tap_flow['port'],
             tap_flow['tap_service'],
-            tap_flow['direction']
+            tap_flow['direction'],
+            tap_flow['vlan_mirror']
         ]
         self.assertEqual(self.columns, columns)
         self.assertEqual(self.data, data)
@@ -209,6 +220,7 @@ class TestListTaasTapFlow(fakes.TestNeutronClientOSCV2):
             tap_flow['port'],
             tap_flow['tap_service'],
             tap_flow['direction'],
+            tap_flow['vlan_mirror'],
             tap_flow['description']
         ]
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -260,6 +272,7 @@ class TestShowTaasTapFlow(fakes.TestNeutronClientOSCV2):
     data = (
         _tf['description'],
         _tf['direction'],
+        _tf['vlan_mirror'],
         _tf['id'],
         _tf['name'],
         _tf['project_id'],
@@ -271,6 +284,7 @@ class TestShowTaasTapFlow(fakes.TestNeutronClientOSCV2):
     columns = (
         'Description',
         'Direction',
+        'Vlan Mirror',
         'ID',
         'Name',
         'Project',

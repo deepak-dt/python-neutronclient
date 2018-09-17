@@ -35,6 +35,7 @@ _attr_map = (
     ('port', 'Source Port', column_util.LIST_BOTH),
     ('tap_service', 'Tap Service Port', column_util.LIST_BOTH),
     ('direction', 'Direction', column_util.LIST_BOTH),
+    ('vlan_mirror', 'Vlan Mirror', column_util.LIST_BOTH),
     ('description', 'Description', column_util.LIST_LONG_ONLY),
     ('project_id', 'Project', column_util.LIST_LONG_ONLY),
 )
@@ -72,6 +73,12 @@ class CreateTaasTapFlow(command.ShowOne):
             choices=['IN', 'OUT', 'BOTH'],
             type=neutronclient_utils.convert_to_uppercase,
             help=_('Direction of the Tap flow.'))
+        parser.add_argument(
+            '--vlan-mirror',
+            required=False,
+            metavar='<vlan_mirror>',
+            type=neutronclient_utils.convert_to_uppercase,
+            help=_('VLAN Ids to be mirrored in the form of range string.'))
         return parser
 
     def take_action(self, parsed_args):
@@ -208,6 +215,8 @@ def _get_attrs(client_manager, attrs, parsed_args):
                                           'tap_service')
     if parsed_args.direction is not None:
         attrs['direction'] = parsed_args.direction
+    if parsed_args.vlan_mirror is not None:
+        attrs['vlan_mirror'] = parsed_args.vlan_mirror
 
 
 def _get_id(client, id_or_name, resource):
