@@ -1,4 +1,4 @@
-# Copyright (c) 2018 AT&T Corporation
+# Copyright (c) 2016 NEC Technologies India Pvt.Limited.
 # All Rights Reserved.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -30,13 +30,60 @@ class TestNeutronClientOSCV2(utils.TestCommand):
         self.app.client_manager.session = mock.Mock()
         self.app.client_manager.neutronclient = mock.Mock()
         self.neutronclient = self.app.client_manager.neutronclient
-        self.neutronclient.find_resource = mock.Mock(
-            side_effect=lambda resource, name_or_id, project_id=None,
-            cmd_resource=None, parent_id=None, fields=None:
-            {'id': name_or_id})
 
 
-class FakeTaasTapService(object):
+class FakeTapFlow(object):
+    """Fake tap flow attributes."""
+
+    @staticmethod
+    def create_tap_flow(attrs=None):
+        """Create a fake tap flow.
+
+        :param Dictionary attrs:
+            A dictionary with all attributes
+        :return:
+            A Dictionary with id, name, description, source_port,
+            tap_service_id, status and tenant_id
+        """
+        attrs = attrs or {}
+
+        # Set default attributes.
+        tap_flow_attrs = {
+            'id': uuidutils.generate_uuid(),
+            'name': 'tap-flow-name',
+            'description': 'description',
+            'tap_service_id': uuidutils.generate_uuid(),
+            'source_port': uuidutils.generate_uuid(),
+            'direction': 'BOTH',
+            'vlan_mirror': '0-4095',
+            'status': "status",
+            'tenant_id': uuidutils.generate_uuid(),
+        }
+
+        # Overwrite default attributes.
+        tap_flow_attrs.update(attrs)
+        return copy.deepcopy(tap_flow_attrs)
+
+    @staticmethod
+    def create_tap_flows(attrs=None, count=1):
+        """Create multiple tap_flows.
+
+        :param Dictionary attrs:
+            A dictionary with all attributes
+        :param int count:
+            The number of tap_flows to fake
+        :return:
+            A list of dictionaries faking the tap_flows
+        """
+        tap_flows = []
+        for i in range(0, count):
+            tap_flow = tap_flows.append(FakeTapFlow.create_tap_flow(attrs))
+        tap_flows.append(tap_flow)
+
+        return {'tap_flows': tap_flows}
+
+
+class FakeTapService(object):
     """Fake tap service attributes."""
 
     @staticmethod
@@ -46,17 +93,19 @@ class FakeTaasTapService(object):
         :param Dictionary attrs:
             A dictionary with all attributes
         :return:
-            A Dictionary with id, name, description, port, project_id
+            A Dictionary with id, name, description,
+            port_id, status and tenant_id
         """
         attrs = attrs or {}
 
         # Set default attributes.
         tap_service_attrs = {
-            'description': 'description',
             'id': uuidutils.generate_uuid(),
-            'port': uuidutils.generate_uuid(),
             'name': 'tap-service-name',
-            'project_id': uuidutils.generate_uuid(),
+            'description': 'description',
+            'port_id': uuidutils.generate_uuid(),
+            'status': "status",
+            'tenant_id': uuidutils.generate_uuid(),
         }
 
         # Overwrite default attributes.
@@ -75,57 +124,9 @@ class FakeTaasTapService(object):
             A list of dictionaries faking the tap_services
         """
         tap_services = []
-        for _ in range(count):
-            tap_services.append(FakeTaasTapService.create_tap_service(attrs))
+        for i in range(0, count):
+            tap_service = tap_services.append(
+                FakeTapService.create_tap_service(attrs))
+        tap_services.append(tap_service)
 
-        return tap_services
-
-
-class FakeTaasTapFlow(object):
-    """Fake tap flow attributes."""
-
-    @staticmethod
-    def create_tap_flow(attrs=None):
-        """Create a fake tap flow.
-
-        :param Dictionary attrs:
-            A dictionary with all attributes
-        :return:
-            A Dictionary with id, name, description, port, tap_service,
-            direction, project_id
-        """
-        attrs = attrs or {}
-
-        # Set default attributes.
-        tap_flow_attrs = {
-            'id': uuidutils.generate_uuid(),
-            'name': 'tap-flow-name',
-            'description': 'description',
-            'tap_service': uuidutils.generate_uuid(),
-            'port': uuidutils.generate_uuid(),
-            'direction': 'BOTH',
-            'vlan_mirror': '0-4095'
-            'project_id': uuidutils.generate_uuid()
-        }
-
-        # tap_flow_attrs default attributes.
-        tap_flow_attrs.update(attrs)
-        return copy.deepcopy(tap_flow_attrs)
-
-    @staticmethod
-    def create_tap_flows(attrs=None, count=1):
-        """Create multiple tap flows.
-
-        :param Dictionary attrs:
-            A dictionary with all attributes
-        :param int count:
-            The number of tap_flows to fake
-        :return:
-            A list of dictionaries faking the tap flows
-        """
-        tap_flows = []
-        for _ in range(count):
-            tap_flows.append(
-                FakeTaasTapFlow.create_tap_flow(attrs))
-
-        return tap_flows
+        return {'tap_services': tap_services}
