@@ -30,7 +30,7 @@ def _get_id(client, id_or_name, resource):
 class TestListTapFlow(fakes.TestNeutronClientOSCV2):
     _tapflow = fakes.FakeTapFlow.create_tap_flows(count=1)
     columns = ('ID', 'Name', 'Source Port', 'Status', 'Tap Service',
-               'Direction', 'Vlan Mirror')
+               'VLAN Mirror')
     data = []
     _tap_flow = _tapflow['tap_flows'][0]
     data.append((
@@ -38,7 +38,6 @@ class TestListTapFlow(fakes.TestNeutronClientOSCV2):
         _tap_flow['name'],
         _tap_flow['source_port'],
         _tap_flow['tap_service_id'],
-        _tap_flow['direction'],
         _tap_flow['vlan_mirror']))
     _tap_flow1 = {'tap_flows': _tap_flow}
     _tap_flow_id = _tap_flow['id']
@@ -144,26 +143,26 @@ class TestShowTapFlow(fakes.TestNeutronClientOSCV2):
     _tf = fakes.FakeTapFlow.create_tap_flow()
     data = (
         _tf['description'],
+        _tf['direction'],
         _tf['id'],
         _tf['name'],
         _tf['source_port'],
         _tf['status'],
         _tf['tap_service_id'],
-        _tf['direction'],
-        _tf['vlan_mirror'],
-        _tf['tenant_id'])
+        _tf['tenant_id'],
+        _tf['vlan_mirror'])
     _tap_flow = {'tap_flow': _tf}
     _tap_flow_id = _tf['id']
     columns = (
         'description',
+        'direction'
         'id',
         'name',
         'source_port',
         'status',
         'tap_service_id',
-        'direction',
-        'vlan_mirror',
-        'tenant_id')
+        'tenant_id',
+        'vlan_mirror')
 
     def setUp(self):
         super(TestShowTapFlow, self).setUp()
