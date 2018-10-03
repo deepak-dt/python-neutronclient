@@ -55,11 +55,11 @@ class CreateTapFlow(command.ShowOne):
         parser = super(CreateTapFlow, self).get_parser(prog_name)
         _add_updatable_args(parser)
         parser.add_argument(
-            'port',
+            '--port',
             help=_('Source port to which the Tap Flow is connected '
                    '(name or ID)'))
         parser.add_argument(
-            'tap-service',
+            '--tap-service',
             help=_('Tap Service with which the tap flow is associated '
                    '(name or ID)'))
         parser.add_argument(

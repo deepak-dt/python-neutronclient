@@ -16,13 +16,6 @@ from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 
 
-def _resolve_resource_path(resource):
-    """Resolves and returns resource path."""
-
-    resource_plural = '%ss' % resource
-    return '/taas/%s/%%s' % resource_plural
-
-
 def get_object_path(resource):
     """Resolves the object path"""
 
@@ -38,7 +31,7 @@ def create_taas_resource(client, resource, props):
 def update_taas_resource(client, resource, prop_diff, resource_id):
     """Returns updated taas resource record."""
 
-    path = _resolve_resource_path(resource)
+    path = get_object_path(resource)
     return client.update_ext(path + '/%s', resource_id,
                                     {resource: prop_diff})
 
@@ -46,21 +39,21 @@ def update_taas_resource(client, resource, prop_diff, resource_id):
 def delete_taas_resource(client, resource, resource_id):
     """Deletes taas resource record and returns status."""
 
-    path = _resolve_resource_path(resource)
+    path = get_object_path(resource)
     return client.delete_ext(path + '/%s', resource_id)
 
 
 def show_taas_resource(client, resource, resource_id):
     """Returns specific taas resource record."""
 
-    path = _resolve_resource_path(resource)
+    path = get_object_path(resource)
     return client.show_ext(path + '/%s', resource_id)
 
 
 def find_taas_resource(client, resource, name_or_id):
     """Returns the id and validate taas resource."""
 
-    path = _resolve_resource_path(resource)
+    path = get_object_path(resource)
 
     try:
         record = client.show_ext(path + '/%s', name_or_id)
