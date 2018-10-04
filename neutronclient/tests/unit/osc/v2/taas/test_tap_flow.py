@@ -155,7 +155,7 @@ class TestShowTapFlow(fakes.TestNeutronClientOSCV2):
     _tap_flow_id = _tf['id']
     columns = (
         'description',
-        'direction'
+        'direction',
         'id',
         'name',
         'source_port',
