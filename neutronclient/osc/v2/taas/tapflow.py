@@ -70,9 +70,9 @@ class CreateTapFlow(command.ShowOne):
             help=_('Direction of the packet flow which needs to be mirrored '
                    'by the tapflow'))
         parser.add_argument(
-            '--vlan-mirror',
+            '--vlan-filter',
             required=False,
-            metavar='<vlan_mirror>',
+            metavar='<vlan_filter>',
             type=n_utils.convert_to_uppercase,
             help=_('VLAN Ids to be mirrored in the form of range string.'))
         return parser
@@ -91,8 +91,8 @@ class CreateTapFlow(command.ShowOne):
         _update_common_attrs(parsed_args, attrs)
         if parsed_args.direction:
             attrs['direction'] = parsed_args.direction
-        if parsed_args.vlan_mirror:
-            attrs['vlan_mirror'] = parsed_args.vlan_mirror
+        if parsed_args.vlan_filter:
+            attrs['vlan_filter'] = parsed_args.vlan_filter
         obj = common.create_taas_resource(client, resource, attrs)
         columns = _get_columns(obj[resource])
         data = utils.get_dict_properties(obj[resource], columns)
@@ -183,8 +183,8 @@ class ListTapFlow(command.Lister):
             collection='tap_flows', path=path,
             retrieve_all=True)
         columns = ['id', 'name', 'source_port', 'status', 'tap_service_id',
-                   'vlan_mirror']
+                   'vlan_filter']
         headers = ('ID', 'Name', 'Source Port', 'Status', 'Tap Service',
-                   'VLAN Mirror')
+                   'VLAN Filter')
         return (headers, (utils.get_dict_properties(
                           s, columns, ) for s in data['tap_flows']))

@@ -55,7 +55,7 @@ class FakeTapFlow(object):
             'tap_service_id': uuidutils.generate_uuid(),
             'source_port': uuidutils.generate_uuid(),
             'direction': 'BOTH',
-            'vlan_mirror': '0-4095',
+            'vlan_filter': '0-4095',
             'status': "status",
             'tenant_id': uuidutils.generate_uuid(),
         }

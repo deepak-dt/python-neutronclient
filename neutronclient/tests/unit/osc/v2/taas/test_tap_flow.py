@@ -30,7 +30,7 @@ def _get_id(client, id_or_name, resource):
 class TestListTapFlow(fakes.TestNeutronClientOSCV2):
     _tapflow = fakes.FakeTapFlow.create_tap_flows(count=1)
     columns = ('ID', 'Name', 'Source Port', 'Status', 'Tap Service',
-               'VLAN Mirror')
+               'VLAN Filter')
     data = []
     _tap_flow = _tapflow['tap_flows'][0]
     data.append((
@@ -38,7 +38,7 @@ class TestListTapFlow(fakes.TestNeutronClientOSCV2):
         _tap_flow['name'],
         _tap_flow['source_port'],
         _tap_flow['tap_service_id'],
-        _tap_flow['vlan_mirror']))
+        _tap_flow['vlan_filter']))
     _tap_flow1 = {'tap_flows': _tap_flow}
     _tap_flow_id = _tap_flow['id']
 
@@ -74,7 +74,7 @@ class TestCreateTapFlow(fakes.TestNeutronClientOSCV2):
         'source_port',
         'tap_service_id',
         'direction',
-        'vlan_mirror',
+        'vlan_filter',
     )
 
     def get_data(self):
@@ -85,7 +85,7 @@ class TestCreateTapFlow(fakes.TestNeutronClientOSCV2):
             self._tap_flow['source_port'],
             self._tap_flow['tap_service_id'],
             self._tap_flow['direction'],
-            self._tap_flow['vlan_mirror'],
+            self._tap_flow['vlan_filter'],
         )
 
     def setUp(self):
@@ -150,7 +150,7 @@ class TestShowTapFlow(fakes.TestNeutronClientOSCV2):
         _tf['status'],
         _tf['tap_service_id'],
         _tf['tenant_id'],
-        _tf['vlan_mirror'])
+        _tf['vlan_filter'])
     _tap_flow = {'tap_flow': _tf}
     _tap_flow_id = _tf['id']
     columns = (
@@ -162,7 +162,7 @@ class TestShowTapFlow(fakes.TestNeutronClientOSCV2):
         'status',
         'tap_service_id',
         'tenant_id',
-        'vlan_mirror')
+        'vlan_filter')
 
     def setUp(self):
         super(TestShowTapFlow, self).setUp()
