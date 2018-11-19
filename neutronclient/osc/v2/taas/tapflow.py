@@ -1,3 +1,4 @@
+# Copyright (c) 2018 AT&T Corporation.
 # Copyright (c) 2016 NEC Technologies India Pvt.Limited.
 # All Rights Reserved.
 #
@@ -21,7 +22,6 @@ from osc_lib import utils
 
 from neutronclient._i18n import _
 from neutronclient.common import utils as n_utils
-from neutronclient.osc.v2.taas import common
 
 LOG = logging.getLogger(__name__)
 
@@ -78,14 +78,10 @@ class CreateTapFlow(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
-        client = common.get_client(self)
-        source_port = common.get_id(
-            client,
-            parsed_args.port,
-            'port')
-        tap_service_id = common.find_taas_resource(
-            client, 'tap_service',
-            parsed_args.tap_service)
+        client = self.app.client_manager.neutronclient
+        source_port = _get_id(client, parsed_args.port, 'port')
+        tap_service_id = _get_id(client, parsed_args.tap_service,
+                                 'tap_service')
         attrs = {'source_port': source_port,
                  'tap_service_id': tap_service_id}
         _update_common_attrs(parsed_args, attrs)
@@ -93,9 +89,10 @@ class CreateTapFlow(command.ShowOne):
             attrs['direction'] = parsed_args.direction
         if parsed_args.vlan_filter:
             attrs['vlan_filter'] = parsed_args.vlan_filter
-        obj = common.create_taas_resource(client, resource, attrs)
-        columns = _get_columns(obj[resource])
-        data = utils.get_dict_properties(obj[resource], columns)
+        body = {resource: attrs}
+        obj = client.create_ext(client.taas_tap_flows_path, body)[resource]
+        columns = _get_columns(obj)
+        data = utils.get_dict_properties(obj, columns)
         return columns, data
 
 
@@ -113,17 +110,16 @@ class DeleteTapFlow(command.Command):
 
     def take_action(self, parsed_args):
         result = 0
-        client = common.get_client(self)
+        client = self.app.client_manager.neutronclient
         for tap_flow in parsed_args.tap_flow:
             try:
-                id = common.find_taas_resource(client, resource,
-                                               tap_flow)
-                common.delete_taas_resource(client, resource, id)
+                id = _get_id(client, tap_flow, resource)
+                client.delete_ext(client.taas_tap_flow_path, id)
             except Exception as e:
                 result += 1
                 LOG.error(_("Failed to delete tap flow with "
-                            "name or ID '%(flow)s': %(e)s"),
-                          {'flow': tap_flow, 'e': e})
+                            "name or ID '%(tap_flow)s': %(e)s"),
+                          {'tap_flow': tap_flow, 'e': e})
 
         if result > 0:
             total = len(parsed_args.tap_flow)
@@ -144,12 +140,11 @@ class ShowTapFlow(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
-        client = common.get_client(self)
-        id = common.find_taas_resource(client, resource,
-                                       parsed_args.tap_flow)
-        obj = common.show_taas_resource(client, resource, id)
-        columns = _get_columns(obj[resource])
-        data = utils.get_dict_properties(obj[resource], columns)
+        client = self.app.client_manager.neutronclient
+        id = _get_id(client, parsed_args.tap_flow, resource)
+        obj = client.show_ext(client.taas_tap_flow_path, id)[resource]
+        columns = _get_columns(obj)
+        data = utils.get_dict_properties(obj, columns)
         return columns, data
 
 
@@ -167,24 +162,33 @@ class SetTapFlow(command.Command):
 
     def take_action(self, parsed_args):
         attrs = {}
-        client = common.get_client(self)
-        id = common.find_taas_resource(client, resource,
-                                       parsed_args.tap_flow)
+        client = self.app.client_manager.neutronclient
+        id = _get_id(client, parsed_args.tap_flow, resource)
         _update_common_attrs(parsed_args, attrs)
-        common.update_taas_resource(client, resource, attrs, id)
+        body = {resource: attrs}
+        try:
+            client.update_ext(client.taas_tap_flow_path, id, body)
+        except Exception as e:
+            msg = (_("Failed to update tap flow '%(tap_flow)s': %(e)s")
+                   % {'tap_flow': parsed_args.tap_flow, 'e': e})
+            raise exceptions.CommandError(msg)
 
 
 class ListTapFlow(command.Lister):
     """List tap flows"""
 
     def take_action(self, parsed_args):
-        path = common.get_object_path(resource)
-        data = common.get_client(self).list_ext(
-            collection='tap_flows', path=path,
-            retrieve_all=True)
+        client = self.app.client_manager.neutronclient
+        data = client.list_ext('tap_flows',
+                               client.taas_tap_flows_path,
+                               retrieve_all=True)
         columns = ['id', 'name', 'source_port', 'status', 'tap_service_id',
                    'vlan_filter']
         headers = ('ID', 'Name', 'Source Port', 'Status', 'Tap Service',
                    'VLAN Filter')
         return (headers, (utils.get_dict_properties(
                           s, columns, ) for s in data['tap_flows']))
+
+
+def _get_id(client, id_or_name, resource):
+    return client.find_resource(resource, id_or_name)['id']

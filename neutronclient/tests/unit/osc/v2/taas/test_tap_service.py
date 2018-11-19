@@ -1,6 +1,6 @@
+# Copyright (c) 2018 AT&T Corporation
 # Copyright (c) 2016 Huawei Technologies India Pvt.Limited.
 # All Rights Reserved.
-#
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -16,9 +16,6 @@
 
 import mock
 
-from osc_lib.tests import utils as tests_utils
-
-from neutronclient.osc.v2.taas import common
 from neutronclient.osc.v2.taas import tapservice
 from neutronclient.tests.unit.osc.v2.taas import fakes
 
@@ -45,6 +42,9 @@ class TestListTapService(fakes.TestNeutronClientOSCV2):
         self.neutronclient.list_ext = mock.Mock(
             return_value=self._tap_service1
         )
+        self.neutronclient.taas_tap_services_path = mock.Mock(
+            return_value='/taas/tap_services'
+        )
         # Get the command object to test
         self.cmd = tapservice.ListTapService(self.app, self.namespace)
 
@@ -54,7 +54,7 @@ class TestListTapService(fakes.TestNeutronClientOSCV2):
         parsed_args = self.check_parser(self.cmd, [], [])
         columns = self.cmd.take_action(parsed_args)
         data = mock_tap_service_list.assert_called_once_with(
-            collection='tap_services', path='/taas/tap_services',
+            'tap_services', client.taas_tap_services_path,
             retrieve_all=True)
         self.assertEqual(self.columns, columns[0])
         self.assertIsNone(data)
@@ -65,38 +65,93 @@ class TestCreateTapService(fakes.TestNeutronClientOSCV2):
     _tap_service = fakes.FakeTapService.create_tap_service()
 
     columns = (
+        'description',
         'id',
         'name',
-        'description',
         'port_id',
+        'status',
+        'tenant_id'
     )
 
     def get_data(self):
         return (
+            self._tap_service['description'],
             self._tap_service['id'],
             self._tap_service['name'],
-            self._tap_service['description'],
             self._tap_service['port_id'],
+            self._tap_service['status'],
+            self._tap_service['tenant_id'],
         )
 
     def setUp(self):
         super(TestCreateTapService, self).setUp()
-        mock.patch('neutronclient.osc.v2.taas.common.find_taas_resource',
+        mock.patch('neutronclient.osc.v2.taas.tapservice._get_id',
                    new=_get_id).start()
-        common.create_taas_resource = mock.Mock(
-            return_value={'tap_services': self._tap_service})
+        self.neutronclient.create_ext = mock.Mock(
+            return_value={'tap_service': self._tap_service})
+        self.neutronclient.taas_tap_services_path = mock.Mock(
+            return_value='/taas/tap_services'
+        )
         self.data = self.get_data()
 
         # Get the command object to test
         self.cmd = tapservice.CreateTapService(self.app,
                                                self.namespace)
 
-    def test_create_tap_service_exception(self):
-        arglist = []
-        verifylist = []
+    def test_create_tap_service_default_options(self):
+        client = self.app.client_manager.neutronclient
+        mock_tap_service_create = client.create_ext
 
-        self.assertRaises(tests_utils.ParserException, self.check_parser,
-                          self.cmd, arglist, verifylist)
+        arglist = [
+            "--name", self._tap_service['name'],
+            "--port", self._tap_service['port_id'],
+        ]
+        verifylist = [
+            ('name', self._tap_service['name']),
+            ('port', self._tap_service['port_id']),
+        ]
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        columns, data = (self.cmd.take_action(parsed_args))
+        attrs = {'name': self._tap_service['name'],
+                 'port_id': self._tap_service['port_id']}
+        body = {'tap_service': attrs}
+        mock_tap_service_create.assert_called_once_with(
+            client.taas_tap_services_path, body
+        )
+        self.assertEqual(self.columns, columns)
+        self.assertEqual(self.data, data)
+
+    def _test_create_tap_service_all_options(self):
+        client = self.app.client_manager.neutronclient
+        mock_tap_service_create = client.create_ext
+
+        arglist = [
+            "--name", self._tap_service['name'],
+            "--description", self._tap_service['description'],
+            "--port", self._tap_service['port_id'],
+        ]
+        verifylist = [
+            ('name', self._tap_service['name']),
+            ('description', self._tap_service['description']),
+            ('port', self._tap_service['port_id']),
+        ]
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        columns, data = (self.cmd.take_action(parsed_args))
+        attrs = {'name': self._tap_service['name'],
+                 'port_id': self._tap_service['port_id'],
+                 'description': self._tap_service['description']}
+        body = {'tap_service': attrs}
+        mock_tap_service_create.assert_called_once_with(
+            client.taas_tap_services_path, body
+        )
+        self.assertEqual(self.columns, columns)
+        self.assertEqual(self.data, data)
+
+    def test_create_tap_service_all_options(self):
+        self._test_create_tap_service_all_options()
+
+    def test_create_tap_service_all_options_mpls(self):
+        self._test_create_tap_service_all_options()
 
 
 class TestDeleteTapService(fakes.TestNeutronClientOSCV2):
@@ -105,16 +160,20 @@ class TestDeleteTapService(fakes.TestNeutronClientOSCV2):
         super(TestDeleteTapService, self).setUp()
         _tap_service = fakes.FakeTapService.create_tap_services()
         self._tap_service = _tap_service['tap_services'][0]
-        _tap_service_id = self._tap_service['id']
-        common.delete_taas_resource = mock.Mock(return_value=None)
-        common.find_taas_resource = mock.Mock(return_value=_tap_service_id)
+        mock.patch('neutronclient.osc.v2.taas.tapservice._get_id',
+                   new=_get_id).start()
+        self.neutronclient.delete_ext = mock.Mock(
+            return_value=None)
+        self.neutronclient.taas_tap_service_path = mock.Mock(
+            return_value='/taas/tap_services/%s'
+        )
         self.cmd = tapservice.DeleteTapService(self.app,
                                                self.namespace)
 
     def test_delete_tap_service(self):
         client = self.app.client_manager.neutronclient
-        tf_id = self._tap_service['id']
-        mock_tap_service_delete = common.delete_taas_resource
+        ts_id = self._tap_service['id']
+        mock_tap_service_delete = client.delete_ext
         arglist = [
             self._tap_service['id'],
         ]
@@ -123,24 +182,23 @@ class TestDeleteTapService(fakes.TestNeutronClientOSCV2):
         ]
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         result = self.cmd.take_action(parsed_args)
-        mock_tap_service_delete.assert_called_once_with(client,
-                                                        'tap_service',
-                                                        tf_id)
+        mock_tap_service_delete.assert_called_once_with(
+            client.taas_tap_service_path, ts_id)
         self.assertIsNone(result)
 
 
 class TestShowTapService(fakes.TestNeutronClientOSCV2):
 
-    _tf = fakes.FakeTapService.create_tap_service()
+    _ts = fakes.FakeTapService.create_tap_service()
     data = (
-        _tf['description'],
-        _tf['id'],
-        _tf['name'],
-        _tf['port_id'],
-        _tf['status'],
-        _tf['tenant_id'])
-    _tap_service = {'tap_service': _tf}
-    _tap_service_id = _tf['id']
+        _ts['description'],
+        _ts['id'],
+        _ts['name'],
+        _ts['port_id'],
+        _ts['status'],
+        _ts['tenant_id'])
+    _tap_service = {'tap_service': _ts}
+    _tap_service_id = _ts['id']
     columns = (
         'description',
         'id',
@@ -151,17 +209,21 @@ class TestShowTapService(fakes.TestNeutronClientOSCV2):
 
     def setUp(self):
         super(TestShowTapService, self).setUp()
-        common.find_taas_resource = mock.Mock(
-            return_value=self._tap_service_id)
-        common.show_taas_resource = mock.Mock(
+        mock.patch('neutronclient.osc.v2.taas.tapservice._get_id',
+                   new=_get_id).start()
+
+        self.neutronclient.show_ext = mock.Mock(
             return_value=self._tap_service
+        )
+        self.neutronclient.taas_tap_service_path = mock.Mock(
+            return_value='/taas/tap_services/%s'
         )
         # Get the command object to test
         self.cmd = tapservice.ShowTapService(self.app, self.namespace)
 
     def test_tap_service_show(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_service_show = common.show_taas_resource
+        mock_tap_service_show = client.show_ext
         arglist = [
             self._tap_service_id,
         ]
@@ -171,10 +233,9 @@ class TestShowTapService(fakes.TestNeutronClientOSCV2):
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
 
         data = self.cmd.take_action(parsed_args)
-        tf_id = self._tap_service_id
-        mock_tap_service_show.assert_called_once_with(client,
-                                                      'tap_service',
-                                                      tf_id)
+        ts_id = self._tap_service_id
+        mock_tap_service_show.assert_called_once_with(
+            client.taas_tap_service_path, ts_id)
         self.assertEqual(self.columns, data[0])
         self.assertEqual(self.data, data[1])
 
@@ -187,16 +248,19 @@ class TestSetTapService(fakes.TestNeutronClientOSCV2):
 
     def setUp(self):
         super(TestSetTapService, self).setUp()
-        common.update_taas_resource = mock.Mock(return_value=None)
-        common.find_taas_resource = mock.Mock(
-            return_value=self._tap_service_id)
+        mock.patch('neutronclient.osc.v2.taas.tapservice._get_id',
+                   new=_get_id).start()
+        self.neutronclient.update_ext = mock.Mock(return_value=None)
+        self.neutronclient.taas_tap_service_path = mock.Mock(
+            return_value='/taas/tap_services/%s'
+        )
 
         self.cmd = tapservice.SetTapService(self.app,
                                             self.namespace)
 
     def test_set_tap_service(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_service_set = common.update_taas_resource
+        mock_tap_service_set = client.update_ext
         arglist = [
             self._tap_service_name,
             '--name', 'name_updated',
@@ -214,8 +278,8 @@ class TestSetTapService(fakes.TestNeutronClientOSCV2):
         attrs = {
             'name': 'name_updated',
             'description': 'desc_updated', }
-        tf_id = self._tap_service_id
-        mock_tap_service_set.assert_called_once_with(client,
-                                                     'tap_service',
-                                                     attrs, tf_id)
+        mock_tap_service_set.assert_called_once_with(
+            client.taas_tap_service_path,
+            self._tap_service_name,
+            {'tap_service': attrs})
         self.assertIsNone(result)

@@ -1,3 +1,4 @@
+# Copyright (c) 2018 AT&T Corporation
 # Copyright (c) 2016 Huawei Technologies India Pvt.Limited.
 # All Rights Reserved.
 #
@@ -16,9 +17,6 @@
 
 import mock
 
-from osc_lib.tests import utils as tests_utils
-
-from neutronclient.osc.v2.taas import common
 from neutronclient.osc.v2.taas import tapflow
 from neutronclient.tests.unit.osc.v2.taas import fakes
 
@@ -48,6 +46,9 @@ class TestListTapFlow(fakes.TestNeutronClientOSCV2):
         self.neutronclient.list_ext = mock.Mock(
             return_value=self._tap_flow1
         )
+        self.neutronclient.taas_tap_flows_path = mock.Mock(
+            return_value='/taas/tap_flows'
+        )
         # Get the command object to test
         self.cmd = tapflow.ListTapFlow(self.app, self.namespace)
 
@@ -57,7 +58,7 @@ class TestListTapFlow(fakes.TestNeutronClientOSCV2):
         parsed_args = self.check_parser(self.cmd, [], [])
         columns = self.cmd.take_action(parsed_args)
         data = mock_tap_flow_list.assert_called_once_with(
-            collection='tap_flows', path='/taas/tap_flows',
+            'tap_flows', client.taas_tap_flows_path,
             retrieve_all=True)
         self.assertEqual(self.columns, columns[0])
         self.assertIsNone(data)
@@ -68,44 +69,120 @@ class TestCreateTapFlow(fakes.TestNeutronClientOSCV2):
     _tap_flow = fakes.FakeTapFlow.create_tap_flow()
 
     columns = (
+        'description',
+        'direction',
         'id',
         'name',
-        'description',
         'source_port',
+        'status',
         'tap_service_id',
-        'direction',
+        'tenant_id',
         'vlan_filter',
     )
 
     def get_data(self):
         return (
+            self._tap_flow['description'],
+            self._tap_flow['direction'],
             self._tap_flow['id'],
             self._tap_flow['name'],
-            self._tap_flow['description'],
             self._tap_flow['source_port'],
+            self._tap_flow['status'],
             self._tap_flow['tap_service_id'],
-            self._tap_flow['direction'],
+            self._tap_flow['tenant_id'],
             self._tap_flow['vlan_filter'],
         )
 
     def setUp(self):
         super(TestCreateTapFlow, self).setUp()
-        mock.patch('neutronclient.osc.v2.taas.common.find_taas_resource',
+        mock.patch('neutronclient.osc.v2.taas.tapflow._get_id',
                    new=_get_id).start()
-        common.create_taas_resource = mock.Mock(
-            return_value={'tap_flows': self._tap_flow})
+        self.neutronclient.create_ext = mock.Mock(
+            return_value={'tap_flow': self._tap_flow})
+        self.neutronclient.taas_tap_flows_path = mock.Mock(
+            return_value='/taas/tap_flows'
+        )
         self.data = self.get_data()
 
         # Get the command object to test
-        self.cmd = tapflow.CreateTapFlow(self.app,
-                                         self.namespace)
+        self.cmd = tapflow.CreateTapFlow(self.app, self.namespace)
 
-    def test_create_tap_flow_exception(self):
-        arglist = []
-        verifylist = []
+    def test_create_tap_flow_default_options(self):
+        client = self.app.client_manager.neutronclient
+        mock_tap_flow_create = client.create_ext
 
-        self.assertRaises(tests_utils.ParserException, self.check_parser,
-                          self.cmd, arglist, verifylist)
+        arglist = [
+            "--port", self._tap_flow['source_port'],
+            "--tap-service", self._tap_flow['tap_service_id'],
+            "--direction", self._tap_flow['direction'],
+            "--vlan-filter", self._tap_flow['vlan_filter']
+        ]
+        verifylist = [
+            ('port', self._tap_flow['source_port']),
+            ('tap_service', self._tap_flow['tap_service_id']),
+            ('direction', self._tap_flow['direction']),
+            ('vlan_filter', self._tap_flow['vlan_filter'])
+        ]
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        columns, data = (self.cmd.take_action(parsed_args))
+
+        attrs = {'source_port': self._tap_flow['source_port'],
+                 'tap_service_id': self._tap_flow['tap_service_id'],
+                 'direction': self._tap_flow['direction'],
+                 'vlan_filter': self._tap_flow['vlan_filter']}
+        body = {'tap_flow': attrs}
+
+        mock_tap_flow_create.assert_called_once_with(
+            client.taas_tap_flows_path, body
+        )
+        self.assertEqual(self.columns, columns)
+        self.assertEqual(self.data, data)
+
+    def _test_create_tap_flow_all_options(self):
+        client = self.app.client_manager.neutronclient
+        mock_tap_flow_create = client.create_ext
+
+        arglist = [
+            "--description", self._tap_flow['description'],
+            "--port", self._tap_flow['source_port'],
+            "--tap-service", self._tap_flow['tap_service_id'],
+            "--direction", self._tap_flow['direction'],
+            "--vlan-filter", self._tap_flow['vlan_filter'],
+            "--name", self._tap_flow['name'],
+        ]
+
+        verifylist = [
+            ('port', self._tap_flow['source_port']),
+            ('tap_service', self._tap_flow['tap_service_id']),
+            ('name', self._tap_flow['name']),
+            ('description', self._tap_flow['description']),
+            ('direction', self._tap_flow['direction']),
+            ('vlan_filter', self._tap_flow['vlan_filter'])
+        ]
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        columns, data = (self.cmd.take_action(parsed_args))
+
+        attrs = {'name': self._tap_flow['name'],
+                 'source_port': self._tap_flow['source_port'],
+                 'tap_service_id': self._tap_flow['tap_service_id'],
+                 'description': self._tap_flow['description'],
+                 'direction': self._tap_flow['direction'],
+                 'vlan_filter': self._tap_flow['vlan_filter']}
+        body = {'tap_flow': attrs}
+
+        mock_tap_flow_create.assert_called_once_with(
+            client.taas_tap_flows_path, body
+        )
+
+        self.assertEqual(self.columns, columns)
+        self.assertEqual(self.data, data)
+
+    def test_create_tap_flow_all_options(self):
+        self._test_create_tap_flow_all_options()
+
+    def test_create_tap_flow_all_options_mpls(self):
+        self._test_create_tap_flow_all_options()
 
 
 class TestDeleteTapFlow(fakes.TestNeutronClientOSCV2):
@@ -114,27 +191,28 @@ class TestDeleteTapFlow(fakes.TestNeutronClientOSCV2):
         super(TestDeleteTapFlow, self).setUp()
         _tap_flow = fakes.FakeTapFlow.create_tap_flows()
         self._tap_flow = _tap_flow['tap_flows'][0]
-        _tap_flow_id = self._tap_flow['id']
-        common.delete_taas_resource = mock.Mock(return_value=None)
-        common.find_taas_resource = mock.Mock(return_value=_tap_flow_id)
-        self.cmd = tapflow.DeleteTapFlow(self.app,
-                                         self.namespace)
+        mock.patch('neutronclient.osc.v2.taas.tapflow._get_id',
+                   new=_get_id).start()
+        self.neutronclient.delete_ext = mock.Mock(return_value=None)
+        self.neutronclient.taas_tap_flow_path = mock.Mock(
+            return_value='/taas/tap_flows/%s'
+        )
+        self.cmd = tapflow.DeleteTapFlow(self.app, self.namespace)
 
     def test_delete_tap_flow(self):
         client = self.app.client_manager.neutronclient
         tf_id = self._tap_flow['id']
-        mock_tap_flow_delete = common.delete_taas_resource
+        mock_tap_flow_delete = client.delete_ext
         arglist = [
-            self._tap_flow['id'],
+            tf_id,
         ]
         verifylist = [
-            ('tap_flow', [self._tap_flow['id']]),
+            ('tap_flow', [tf_id]),
         ]
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         result = self.cmd.take_action(parsed_args)
-        mock_tap_flow_delete.assert_called_once_with(client,
-                                                     'tap_flow',
-                                                     tf_id)
+        mock_tap_flow_delete.assert_called_once_with(
+            client.taas_tap_flow_path, tf_id)
         self.assertIsNone(result)
 
 
@@ -166,17 +244,22 @@ class TestShowTapFlow(fakes.TestNeutronClientOSCV2):
 
     def setUp(self):
         super(TestShowTapFlow, self).setUp()
-        common.find_taas_resource = mock.Mock(
-            return_value=self._tap_flow_id)
-        common.show_taas_resource = mock.Mock(
+        mock.patch('neutronclient.osc.v2.taas.tapflow._get_id',
+                   new=_get_id).start()
+
+        self.neutronclient.show_ext = mock.Mock(
             return_value=self._tap_flow
         )
+        self.neutronclient.taas_tap_flow_path = mock.Mock(
+            return_value='/taas/tap_flows/%s'
+        )
+
         # Get the command object to test
         self.cmd = tapflow.ShowTapFlow(self.app, self.namespace)
 
     def test_tap_flow_show(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_flow_show = common.show_taas_resource
+        mock_tap_flow_show = client.show_ext
         arglist = [
             self._tap_flow_id,
         ]
@@ -187,9 +270,8 @@ class TestShowTapFlow(fakes.TestNeutronClientOSCV2):
 
         data = self.cmd.take_action(parsed_args)
         tf_id = self._tap_flow_id
-        mock_tap_flow_show.assert_called_once_with(client,
-                                                   'tap_flow',
-                                                   tf_id)
+        mock_tap_flow_show.assert_called_once_with(
+            client.taas_tap_flow_path, tf_id)
         self.assertEqual(self.columns, data[0])
         self.assertEqual(self.data, data[1])
 
@@ -202,16 +284,17 @@ class TestSetTapFlow(fakes.TestNeutronClientOSCV2):
 
     def setUp(self):
         super(TestSetTapFlow, self).setUp()
-        common.update_taas_resource = mock.Mock(return_value=None)
-        common.find_taas_resource = mock.Mock(
-            return_value=self._tap_flow_id)
-
-        self.cmd = tapflow.SetTapFlow(self.app,
-                                      self.namespace)
+        mock.patch('neutronclient.osc.v2.taas.tapflow._get_id',
+                   new=_get_id).start()
+        self.neutronclient.update_ext = mock.Mock(return_value=None)
+        self.neutronclient.taas_tap_flow_path = mock.Mock(
+            return_value='/taas/tap_flows/%s'
+        )
+        self.cmd = tapflow.SetTapFlow(self.app, self.namespace)
 
     def test_set_tap_flow(self):
         client = self.app.client_manager.neutronclient
-        mock_tap_flow_set = common.update_taas_resource
+        mock_tap_flow_set = client.update_ext
         arglist = [
             self._tap_flow_name,
             '--name', 'name_updated',
@@ -222,15 +305,14 @@ class TestSetTapFlow(fakes.TestNeutronClientOSCV2):
             ('name', 'name_updated'),
             ('description', 'desc_updated'),
         ]
-
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         result = self.cmd.take_action(parsed_args)
 
         attrs = {
             'name': 'name_updated',
             'description': 'desc_updated', }
-        tf_id = self._tap_flow_id
-        mock_tap_flow_set.assert_called_once_with(client,
-                                                  'tap_flow',
-                                                  attrs, tf_id)
+        mock_tap_flow_set.assert_called_once_with(
+            client.taas_tap_flow_path,
+            self._tap_flow_name,
+            {'tap_flow': attrs})
         self.assertIsNone(result)

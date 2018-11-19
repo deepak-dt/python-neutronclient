@@ -1,3 +1,4 @@
+# Copyright (c) 2018 AT&T Corporation.
 # Copyright (c) 2016 NEC Technologies India Pvt.Limited.
 # All Rights Reserved.
 #
@@ -20,7 +21,6 @@ from osc_lib import exceptions
 from osc_lib import utils
 
 from neutronclient._i18n import _
-from neutronclient.osc.v2.taas import common
 
 LOG = logging.getLogger(__name__)
 
@@ -54,21 +54,19 @@ class CreateTapService(command.ShowOne):
         parser = super(CreateTapService, self).get_parser(prog_name)
         _add_updatable_args(parser)
         parser.add_argument(
-            'port',
+            '--port',
             help=_('Port to which the Tap service is connected (name or ID)'))
         return parser
 
     def take_action(self, parsed_args):
-        client = common.get_client(self)
-        port_id = common.get_id(
-            client,
-            parsed_args.port,
-            'port')
+        client = self.app.client_manager.neutronclient
+        port_id = _get_id(client, parsed_args.port, 'port')
         attrs = {'port_id': port_id}
         _update_common_attrs(parsed_args, attrs)
-        obj = common.create_taas_resource(client, resource, attrs)
-        columns = _get_columns(obj[resource])
-        data = utils.get_dict_properties(obj[resource], columns)
+        body = {resource: attrs}
+        obj = client.create_ext(client.taas_tap_services_path, body)[resource]
+        columns = _get_columns(obj)
+        data = utils.get_dict_properties(obj, columns)
         return columns, data
 
 
@@ -87,17 +85,16 @@ class DeleteTapService(command.Command):
 
     def take_action(self, parsed_args):
         result = 0
-        client = common.get_client(self)
+        client = self.app.client_manager.neutronclient
         for tap_service in parsed_args.tap_service:
             try:
-                id = common.find_taas_resource(client, resource,
-                                               tap_service)
-                common.delete_taas_resource(client, resource, id)
+                id = _get_id(client, tap_service, resource)
+                client.delete_ext(client.taas_tap_service_path, id)
             except Exception as e:
                 result += 1
                 LOG.error(_("Failed to delete tap service with "
-                            "name or ID '%(service)s': %(e)s"),
-                          {'service': tap_service, 'e': e})
+                            "name or ID '%(tap_service)s': %(e)s"),
+                          {'tap_service': tap_service, 'e': e})
 
         if result > 0:
             total = len(parsed_args.tap_service)
@@ -119,12 +116,11 @@ class ShowTapService(command.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
-        client = common.get_client(self)
-        id = common.find_taas_resource(client, resource,
-                                       parsed_args.tap_service)
-        obj = common.show_taas_resource(client, resource, id)
-        columns = _get_columns(obj[resource])
-        data = utils.get_dict_properties(obj[resource], columns)
+        client = self.app.client_manager.neutronclient
+        id = _get_id(client, parsed_args.tap_service, resource)
+        obj = client.show_ext(client.taas_tap_service_path, id)[resource]
+        columns = _get_columns(obj)
+        data = utils.get_dict_properties(obj, columns)
         return columns, data
 
 
@@ -143,21 +139,31 @@ class SetTapService(command.Command):
 
     def take_action(self, parsed_args):
         attrs = {}
-        client = common.get_client(self)
-        id = common.find_taas_resource(client, resource,
-                                       parsed_args.tap_service)
+        client = self.app.client_manager.neutronclient
+        id = _get_id(client, parsed_args.tap_service, resource)
         _update_common_attrs(parsed_args, attrs)
-        common.update_taas_resource(client, resource, attrs, id)
+        body = {resource: attrs}
+        try:
+            client.update_ext(client.taas_tap_service_path, id, body)
+        except Exception as e:
+            msg = (_("Failed to update tap service '%(tap_service)s': %(e)s")
+                   % {'tap_service': parsed_args.tap_service, 'e': e})
+            raise exceptions.CommandError(msg)
 
 
 class ListTapService(command.Lister):
     """List tap services"""
 
     def take_action(self, parsed_args):
-        data = common.get_client(self).list_ext(
-            collection='tap_services', path=common.get_object_path(resource),
-            retrieve_all=True)
+        client = self.app.client_manager.neutronclient
+        data = client.list_ext('tap_services',
+                               client.taas_tap_services_path,
+                               retrieve_all=True)
         list_columns = ['id', 'name', 'port_id', 'status']
         headers = ('ID', 'Name', 'Port', 'Status')
         return (headers, (utils.get_dict_properties(
                           s, list_columns, ) for s in data['tap_services']))
+
+
+def _get_id(client, id_or_name, resource):
+    return client.find_resource(resource, id_or_name)['id']
