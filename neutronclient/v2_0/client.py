@@ -2174,6 +2174,25 @@ class Client(ClientBase):
         return self.delete(
             self.bgpvpn_router_association_path % (bgpvpn, router_assoc))
 
+    def list_tap_services(self, retrieve_all=True, **_params):
+        """Fetches a list of all Tap Services."""
+        return self.list('tap_services', self.taas_tap_services_path,
+                         retrieve_all, **_params)
+
+    def show_tap_service(self, tap_service, **_params):
+        """Fetches information of a certain Tap Service."""
+        return self.get(self.taas_tap_service_path % (tap_service),
+                        params=_params)
+
+    def list_tap_flows(self, retrieve_all=True, **_params):
+        """Fetches a list of all Tap Flows."""
+        return self.list('tap_flows', self.taas_tap_flows_path, retrieve_all,
+                         **_params)
+
+    def show_tap_flow(self, tap_flow, **_params):
+        """Fetches information of a certain Tap Flow."""
+        return self.get(self.taas_tap_flow_path % (tap_flow), params=_params)
+
     def __init__(self, **kwargs):
         """Initialize a new client for the Neutron v2.0 API."""
         super(Client, self).__init__(**kwargs)
